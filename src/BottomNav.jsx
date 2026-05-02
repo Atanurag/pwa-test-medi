@@ -32,12 +32,12 @@ export default function BottomNav({ active, setScreen }) {
         onClick={() => setScreen("scan")}
       />
 
-      <NavItem
+      {/* <NavItem
         icon={faFileLines}
         label="Reports"
         active={active === "reports"}
         onClick={() => setScreen("reports")}
-      />
+      /> */}
     </div>
   );
 }

@@ -12,7 +12,7 @@ export default function MainLayout() {
     if (screen === "home") return <Home />;
     if (screen === "inventory") return <Inventory />;
     if (screen === "scan") return <Scan />;
-    if (screen === "reports") return <Reports />;
+    // if (screen === "reports") return <Reports />;
   };
 
   return (
