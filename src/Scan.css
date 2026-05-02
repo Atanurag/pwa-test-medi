@@ -53,6 +53,14 @@
     color: #166534;
   }
   
+  .ocr-btn {
+    margin-top: 10px;
+    width: 100%;
+    padding: 12px;
+    background: #f59e0b;
+    color: white;
+    border-radius: 10px;
+  }
   /* ACTIVE MODE */
   .scan-active {
     margin-top: 30px;
