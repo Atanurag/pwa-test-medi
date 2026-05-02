@@ -1,0 +1,11 @@
+.layout {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 90px; /* 🔥 space for nav */
+  }

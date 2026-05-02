@@ -1,11 +1,9 @@
 body {
   margin: 0;
-  font-family: 'Inter', sans-serif;
-  background: #ecfdf5;
-  color: #111;
+  font-family: Inter;
+  background: #e6f4ea;
 }
 
-/* HEADER */
 .header {
   background: #16a34a;
   color: white;
@@ -14,173 +12,100 @@ body {
   justify-content: space-between;
 }
 
-/* DASHBOARD */
-.dashboard {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  padding: 12px;
-}
-
-.card-pro {
-  background: white;
-  border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
-}
-
-.card-top {
+.login-bg {
+  height: 100vh;
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 8px;
-  color: #555;
 }
 
-.card-pro h2 {
-  margin-top: 10px;
-}
-
-.card-pro.warn {
-  border-left: 5px solid orange;
-}
-
-.card-pro.success {
-  border-left: 5px solid #16a34a;
-}
-
-/* SCAN */
-.scan-screen {
-  padding: 16px;
-}
-
-.scan-main-card {
+.login-card {
   background: white;
+  padding: 30px;
   border-radius: 20px;
-  padding: 24px;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+  width: 90%;
 }
 
-.scan-header {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.scan-header svg {
-  font-size: 28px;
-  color: #16a34a;
-}
-
-.scan-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.scan-action-card {
-  padding: 18px;
-  border-radius: 16px;
-  background: #f0fdf4;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.scan-action-card:hover {
-  transform: scale(1.02);
-}
-
-.scan-action-card svg {
-  font-size: 20px;
-  margin-bottom: 6px;
-}
-
-.scan-action-card.sell {
-  background: #dcfce7;
-}
-
-.scanner-live {
-  margin-top: 10px;
-}
-
-.scanner-top {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.scanner-box {
-  border-radius: 12px;
-  overflow: hidden;
-}
-/* UDHARI */
-.udhari-screen {
-  padding: 12px;
-}
-
-.udhari-card {
-  background: white;
-  padding: 16px;
-  border-radius: 16px;
-  margin-bottom: 12px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
-}
-
-.udhari-card input {
+input {
   width: 100%;
-  margin-top: 8px;
   padding: 12px;
+  margin-top: 10px;
   border-radius: 10px;
   border: 1px solid #ddd;
 }
 
-.udhari-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.udhari-item {
-  display: flex;
-  justify-content: space-between;
-  background: white;
-  padding: 14px;
-  border-radius: 12px;
-}
-
-.settle {
+button {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
   background: #16a34a;
   color: white;
-  border-radius: 8px;
 }
 
-/* NAV */
+.home {
+  padding: 16px;
+}
+
+.stat {
+  background: white;
+  padding: 16px;
+  border-radius: 16px;
+  margin-top: 10px;
+}
+
+.stat.danger { border-left: 5px solid red; }
+.stat.success { border-left: 5px solid green; }
+
+.inventory {
+  padding: 12px;
+}
+
+.med-card {
+  background: white;
+  padding: 14px;
+  margin-top: 10px;
+  border-radius: 16px;
+}
+
+.med-top {
+  display: flex;
+  justify-content: space-between;
+}
+
+.med-bottom {
+  display: flex;
+  justify-content: space-between;
+}
+
+.scan-page {
+  padding: 16px;
+}
+
+.scan-card-big {
+  background: white;
+  padding: 30px;
+  margin-top: 10px;
+  border-radius: 20px;
+  text-align: center;
+}
+
 .nav {
   position: fixed;
   bottom: 0;
   width: 100%;
   display: flex;
   background: white;
-  border-top: 1px solid #eee;
-  height: 70px;
 }
 
 .nav button {
   flex: 1;
   background: none;
-  border: none;
+  color: #555;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  color: #666;
-  font-size: 12px;
-}
-
-.nav button svg {
-  font-size: 18px;
 }
 
 .nav .active {
   color: #16a34a;
-  font-weight: 600;
 }
