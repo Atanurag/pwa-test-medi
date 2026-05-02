@@ -7,5 +7,5 @@
   .content {
     flex: 1;
     overflow-y: auto;
-    padding-bottom: 90px; /* 🔥 space for nav */
+    padding-bottom: 180px; /* 🔥 space for nav */
   }
