@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./Scan.css";
-import { Html5Qrcode } from "html5-qrcode";
 import Tesseract from "tesseract.js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -13,116 +12,127 @@ export default function Scan() {
   const [mode, setMode] = useState(null);
   const [scannedData, setScannedData] = useState(null);
   const [qty, setQty] = useState(1);
-  const [showOCR, setShowOCR] = useState(false);
 
-  const scannerRef = useRef(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
-  // 🔥 START SCANNER
+  // 🎥 CAMERA START (MediaPipe-style loop)
   useEffect(() => {
     if (!mode) return;
 
-    const scanner = new Html5Qrcode("reader");
-    scannerRef.current = scanner;
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" },
+    }).then((stream) => {
+      videoRef.current.srcObject = stream;
+      videoRef.current.play();
+    });
 
-    let found = false;
-
-    scanner.start(
-      { facingMode: "environment" },
-      { fps: 10 },
-      async (text) => {
-        found = true;
-        await scanner.stop();
-
-        // Try QR parsing
-        const parsed = parseQR(text);
-
-        setScannedData({
-          name: "Scanned Medicine",
-          barcode: text,
-          ...parsed,
-        });
+    return () => {
+      if (videoRef.current?.srcObject) {
+        videoRef.current.srcObject
+          .getTracks()
+          .forEach((t) => t.stop());
       }
-    );
-
-    // ⏱ fallback timer
-    setTimeout(() => {
-      if (!found) setShowOCR(true);
-    }, 4000);
-
-    return () => scanner.stop().catch(() => {});
+    };
   }, [mode]);
 
-  // 🔍 QR PARSER
-  const parseQR = (text) => {
-    return {
-      expiry: text.match(/(\d{2}\/\d{4})/)?.[0] || "",
-      batch: text.match(/B\.?No\.?\s*([A-Z0-9]+)/i)?.[1] || "",
-    };
-  };
-
-  // 📷 OCR CAPTURE
-  const handleOCR = async () => {
-    const video = document.querySelector("video");
-
-    const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+  // 📷 CAPTURE + OCR
+  const captureAndScan = async () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
 
-    ctx.drawImage(video, 0, 0);
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
 
-    // 🧠 preprocess
-    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    for (let i = 0; i < imgData.data.length; i += 4) {
+    // 🔥 ROI (bottom strip)
+    const roiY = canvas.height * 0.6;
+    const roiHeight = canvas.height * 0.3;
+
+    ctx.drawImage(
+      video,
+      0,
+      roiY,
+      canvas.width,
+      roiHeight,
+      0,
+      0,
+      canvas.width,
+      roiHeight
+    );
+
+    // 🔥 preprocess (grayscale + threshold)
+    const img = ctx.getImageData(0, 0, canvas.width, roiHeight);
+
+    for (let i = 0; i < img.data.length; i += 4) {
       const avg =
-        (imgData.data[i] +
-          imgData.data[i + 1] +
-          imgData.data[i + 2]) /
-        3;
-      imgData.data[i] = avg;
-      imgData.data[i + 1] = avg;
-      imgData.data[i + 2] = avg;
-    }
-    ctx.putImageData(imgData, 0, 0);
+        (img.data[i] + img.data[i + 1] + img.data[i + 2]) / 3;
 
-    const result = await Tesseract.recognize(canvas, "eng");
+      const val = avg > 140 ? 255 : 0;
+
+      img.data[i] = val;
+      img.data[i + 1] = val;
+      img.data[i + 2] = val;
+    }
+
+    ctx.putImageData(img, 0, 0);
+
+    const result = await Tesseract.recognize(canvas, "eng", {
+      tessedit_char_whitelist:
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./₹",
+    });
 
     const text = result.data.text;
 
-    setScannedData({
-      name: text.split("\n")[0],
-      expiry:
-        text.match(/EXP\.?\s*([A-Z]{3}\s?\d{4}|\d{2}\/\d{4})/i)?.[1] ||
-        "",
+    const data = {
+      name: text.split("\n")[0] || "Medicine",
       batch:
-        text.match(/B\.?No\.?\s*([A-Z0-9]+)/i)?.[1] || "",
-      price:
+        text.match(/(?:B\.?No|Batch|BN)\.?\s*([A-Z0-9]+)/i)?.[1] || "",
+      mfg:
+        text.match(/MFG\.?\s*([A-Z0-9\/]+)/i)?.[1] || "",
+      exp:
+        text.match(/EXP\.?\s*([A-Z0-9\/]+)/i)?.[1] || "",
+      mrp:
         text.match(/(?:MRP|₹)\s*([\d.]+)/i)?.[1] || "",
-    });
+    };
+
+    // 🔔 FEEDBACK
+    navigator.vibrate(100);
+    new Audio(
+      "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+    ).play();
+
+    setScannedData(data);
   };
 
   // 🟢 STOCK
   const handleStock = () => {
-    const inv = JSON.parse(localStorage.getItem("inv")) || [];
+    const inv =
+      JSON.parse(localStorage.getItem("anurag_inventory")) || [];
 
-    inv.push({ ...scannedData, stock: qty });
+    inv.push({
+      ...scannedData,
+      stock: qty,
+      dateAdded: new Date(),
+    });
 
-    localStorage.setItem("inv", JSON.stringify(inv));
+    localStorage.setItem("anurag_inventory", JSON.stringify(inv));
     reset();
   };
 
   // 🔴 SELL
   const handleSell = () => {
-    let inv = JSON.parse(localStorage.getItem("inv")) || [];
+    let inv =
+      JSON.parse(localStorage.getItem("anurag_inventory")) || [];
 
-    const item = inv.find((i) => i.barcode === scannedData.barcode);
+    const item = inv.find((i) => i.batch === scannedData.batch);
 
     if (!item) return alert("Item not found");
 
     item.stock -= qty;
     if (item.stock < 0) item.stock = 0;
 
-    localStorage.setItem("inv", JSON.stringify(inv));
+    localStorage.setItem("anurag_inventory", JSON.stringify(inv));
     reset();
   };
 
@@ -130,13 +140,11 @@ export default function Scan() {
     setMode(null);
     setScannedData(null);
     setQty(1);
-    setShowOCR(false);
   };
 
   return (
     <div className="scan-page">
 
-      {/* HOME */}
       {!mode && (
         <>
           <div className="scan-icon">
@@ -151,7 +159,6 @@ export default function Scan() {
               <FontAwesomeIcon icon={faClipboardCheck} />
             </div>
             <h2>Stock In</h2>
-            <p>Add or update inventory</p>
           </div>
 
           <div className="scan-card" onClick={() => setMode("sell")}>
@@ -159,22 +166,22 @@ export default function Scan() {
               <FontAwesomeIcon icon={faCashRegister} />
             </div>
             <h2>Quick Sell</h2>
-            <p>Fast checkout</p>
           </div>
         </>
       )}
 
       {/* CAMERA */}
       {mode && !scannedData && (
-        <>
-          <div id="reader" className="scanner-box" />
+        <div className="scanner-container">
+          <video ref={videoRef} className="video" />
+          <canvas ref={canvasRef} />
 
-          {showOCR && (
-            <button className="ocr-btn" onClick={handleOCR}>
-              Read Text Instead
-            </button>
-          )}
-        </>
+          <div className="roi-box"></div>
+
+          <button className="scan-btn" onClick={captureAndScan}>
+            Capture & Scan
+          </button>
+        </div>
       )}
 
       {/* MODAL */}
@@ -184,12 +191,13 @@ export default function Scan() {
 
             <h2>{scannedData.name}</h2>
 
-            <p>Expiry: {scannedData.expiry || "N/A"}</p>
             <p>Batch: {scannedData.batch || "N/A"}</p>
-            <p>MRP: {scannedData.price || "N/A"}</p>
+            <p>MFG: {scannedData.mfg || "N/A"}</p>
+            <p>EXP: {scannedData.exp || "N/A"}</p>
+            <p>MRP: ₹{scannedData.mrp || "N/A"}</p>
 
             <div className="qty-buttons">
-              {[1,2,3,5,10].map((n) => (
+              {[1,2,3,5,10].map(n => (
                 <button key={n} onClick={() => setQty(n)}>
                   {n}
                 </button>
